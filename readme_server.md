@@ -27,16 +27,13 @@ Commands and Arguments
     reminder
         Reminder of basic operations and how to perform them with wg or wg-quick.
     show [<interface-name>]
-        Similar to wg show but will list all interfaces with a config file (including disabled ones).
+        Similar to 'wg show' but will list all interfaces with a config file (including disabled ones).
+        If an interface name is provided it will show the config file for that interface.
     new {<interface-name>} [-a <address>] [-p <port>] [-f <forwarding-interface>]  
         Creates a new WireGuard interface. The command manages the creation of the logical interface, the WireGuard configuration file and the server keys.  
         The address configures an address for the server in the VPN. Default is 10.0.0.1
         The port specifies the listening port for this interface of WireGuard. Default is 51820.
         The forwarding-interface specifies the interface to route traffic through which is not directed to this server. If not set, forwarding will be disabled for this interface until it is manually enabled with the enable-forwarding command.
-    enable {<interface-name>}
-        Alias for wg-quick up. Enables an existent, but disabled interface.  
-    disable {<interface-name>}  
-        Alias for wg-quick down. Disables an interface without deleting it.  
     enable-forwarding {<interface-name>} {<forwarding-interface>}  
         Enables traffic forwarding. This enables peers to route all traffic through the encrypted tunnel interface and reach their destination. Will also allow peers to reach devices in the LAN.  
     disable-forwarding {<interface-name>}  

@@ -29,6 +29,10 @@ check_run(){ # Run configuration commands
     fi
     if [ "$visualize" == "false" ]; then eval $1; fi
 }
+reminder(){
+    echo "Use wg-quick up/down {<interface name>} to enable or disable an interface without deleting it"
+    echo "Use wg show [<interface name>] to view the status of current interfaces"
+}
 new(){
     # Mandatory args
     if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
@@ -66,28 +70,6 @@ new(){
     fi
 
     check_run "wg-quick up ${interface_name}"
-}
-enable(){
-    # Mandatory args
-    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
-        help=true
-        return
-    fi
-    interface_name=$1
-    check_run "wg-quick up ${interface_name}"
-}
-disable(){
-    # Mandatory args
-    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
-        help=true
-        return
-    fi
-    interface_name=$1
-    check_run "wg-quick down ${interface_name}"
-}
-reminder(){
-    echo "Use wg-quick up/down {<interface name>} to enable or disable an interface without deleting it"
-    echo "Use wg show [<interface name>] to view the status of current interfaces"
 }
 enable-forwarding(){
     echo "Not implemented"
@@ -129,21 +111,17 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
         -h|--help) help=true ;;
         -v|--visualize) visualize=true; echo "~Visualize mode~" ;;
         # COMMANDS
-        new)
-            syntax="new {<interface-name>} [-a <address>] [-p <port>] [-f <forwarding-interface>]"
-            if [ "$help" != "true" ] ; then shift; new $*; fi # if help needed, don't execute
-        ;;
-        enable)
-            syntax="enable {<interface-name>}"
-            if [ "$help" != "true" ] ; then shift; enable $*; fi
-        ;;
-        disable)
-            syntax="disable {<interface-name>}"
-            if [ $help != "true" ]; then shift; disable $*; fi
-        ;;
         reminder)
             syntax="reminder"
             if [ $help != "true" ]; then shift; reminder $*; fi
+        ;;
+        show)
+            syntax="show [<interface-name>]"
+            if [ $help != "true" ]; then shift; show $*; fi
+        ;;
+        new)
+            syntax="new {<interface-name>} [-a <address>] [-p <port>] [-f <forwarding-interface>]"
+            if [ "$help" != "true" ] ; then shift; new $*; fi # if help needed, don't execute
         ;;
         enable-forwarding)
             syntax="enable-forwarding {<interface-name>} {<forwarding-interface>}"
