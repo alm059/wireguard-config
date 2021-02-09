@@ -85,6 +85,10 @@ disable(){
     interface_name=$1
     check_run "wg-quick down ${interface_name}"
 }
+reminder(){
+    echo "Use wg-quick up/down {<interface name>} to enable or disable an interface without deleting it"
+    echo "Use wg show [<interface name>] to view the status of current interfaces"
+}
 enable-forwarding(){
     echo "Not implemented"
 }
@@ -123,7 +127,7 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
     case "$1" in
         # OPTIONS
         -h|--help) help=true ;;
-        -v|--visualize) visualize=true ;;
+        -v|--visualize) visualize=true; echo "~Visualize mode~" ;;
         # COMMANDS
         new)
             syntax="new {<interface-name>} [-a <address>] [-p <port>] [-f <forwarding-interface>]"
@@ -136,6 +140,10 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
         disable)
             syntax="disable {<interface-name>}"
             if [ $help != "true" ]; then shift; disable $*; fi
+        ;;
+        reminder)
+            syntax="reminder"
+            if [ $help != "true" ]; then shift; reminder $*; fi
         ;;
         enable-forwarding)
             syntax="enable-forwarding {<interface-name>} {<forwarding-interface>}"

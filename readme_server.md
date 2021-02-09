@@ -5,9 +5,10 @@ Syntax
     bash wireguard_server.sh [options] <command> <arguments> [optional arguments]  
 
 Description  
-    Taking advantage of the simplicity of WireGuard, this script aims to simplify basic operations, with common options which should suit most use cases, for the VPN creation, configuration, management and removal of WireGuard interfaces with single commands.  
-    This intends to be a basic configurator which tries to abstract the firewall and system configuration from the user, and it will always manage the VPN by editing a file in /etc/wireguard/[interface name].conf where interface name is the name set by the user. Most customizations which can be carried out in the conf file (such as editing peer data, modifying interfaces or altering IPs) at present are out of the scope of this project. There is rich documentation available for WireGuard in their sites, in the man command for wg, or learning from the multiple sources available online to manually understand and edit the conf file.  
-    
+    Taking advantage of the simplicity of WireGuard, this script aims to simplify basic operations, with common options which should suit most use cases, for the VPN creation, management and removal of WireGuard interfaces with single commands.  
+    It is not intended as means to replace the wg or wg-quick commands, but to complement them.
+    The objective is to abstract the firewall and system configuration from the user, and it will always manage the VPN by editing a file in /etc/wireguard/[interface name].conf where interface name is the name set by the user. Most customizations which can be carried out in the conf file (such as editing peer data, modifying interfaces or altering IPs) at present are out of the scope of this project. There is rich documentation available for WireGuard in their sites, in the man command for wg, or learning from the multiple sources available online to manually understand and edit the conf file.  
+
 
 Requirements  
     SUDO access  
@@ -23,6 +24,10 @@ Options
         visualize commands that will be ran without modifying the existing environment
 
 Commands and Arguments  
+    reminder
+        Reminder of basic operations and how to perform them with wg or wg-quick.
+    show [<interface-name>]
+        Similar to wg show but will list all interfaces with a config file (including disabled ones).
     new {<interface-name>} [-a <address>] [-p <port>] [-f <forwarding-interface>]  
         Creates a new WireGuard interface. The command manages the creation of the logical interface, the WireGuard configuration file and the server keys.  
         The address configures an address for the server in the VPN. Default is 10.0.0.1
