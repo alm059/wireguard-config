@@ -49,11 +49,3 @@ Commands and Arguments
     peer-remove {<interface-name>} {-i <peer-ip> | -n <name or identifier>}  
         Delete a peer and remove its information from the configuration file. Requires confirmation.
         To identify the peer use the peer-ip (unique for each peer) or a name/identifier if it was defined on creation. If multiple peers are found the process will be aborted.
-
-ToDo
-    · Enable traffic forwarding on a per-client basis
-    · Enable forwarding with/without LAN access
-    · Autogenerate peer-ip
-    · Substitute abortion for confirmation if multiple peers are found on the peer operations.
-    · IPv6 support
-    · IP address validator
