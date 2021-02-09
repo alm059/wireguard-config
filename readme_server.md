@@ -1,8 +1,8 @@
 Definition  
     wg-config: manage wireguard interfaces with a single command  
 
-Synopsis  
-    wireguard_server.sh [options] <command> <arguments> [optional arguments]  
+Syntax  
+    bash wireguard_server.sh [options] <command> <arguments> [optional arguments]  
 
 Description  
     Taking advantage of the simplicity of WireGuard, this script aims to simplify basic operations, with common options which should suit most use cases, for the VPN creation, configuration, management and removal of WireGuard interfaces with single commands.  
@@ -16,9 +16,9 @@ Requirements
         Install with: sudo apt install ufw  
 
 Options  
-    --help  
+    -h|--help  
         Get general help or command specific help  
-    -v  
+    -v|--visualize  
         visualize commands that will be ran instead of executing them  
 
 Commands and Arguments  
