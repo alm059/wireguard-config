@@ -27,16 +27,36 @@ visualize=false
 syntax=false # While false it hasn't found any command
 
 
-new(){}
-enable(){}
-disable(){}
-enable-forwarding(){}
-disable-forwarding(){}
-remove(){}
-peer-new(){}
-peer-enable(){}
-peer-disable(){}
-peer-remove(){}
+new(){
+    echo "Not implemented"
+}
+enable(){
+    echo "Not implemented"
+}
+disable(){
+    echo "Not implemented"
+}
+enable-forwarding(){
+    echo "Not implemented"
+}
+disable-forwarding(){
+    echo "Not implemented"
+}
+remove(){
+    echo "Not implemented"
+}
+peer-new(){
+    echo "Not implemented"
+}
+peer-enable(){
+    echo "Not implemented"
+}
+peer-disable(){
+    echo "Not implemented"
+}
+peer-remove(){
+    echo "Not implemented"
+}
 
 
 while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
