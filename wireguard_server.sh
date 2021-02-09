@@ -11,32 +11,79 @@
 # Endpoint = ${server_public_ip}:${server_port}
 # PersistentKeepalive = 25
 # EOF
-#
-#   cat >> ${server_config} <<EOF
-# ### ${client_name} - START
-# [Peer]
-# # friendly_name = ${client_name}
-# PublicKey = $(head -1 ${client_public_key})
-# PresharedKey = $(head -1 ${preshared_key})
-# AllowedIPs = ${client_wg_ip}/32
-# ### ${client_name} - END
+
+#     cat >> "/etc/wireguard/${interface_name}.conf" <<EOF
+# PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE
+# PostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE
 # EOF
 
 help=false
 visualize=false
 syntax=false # While false it hasn't found any command
 
-# check_visualize(){
-#
-# }
+check_run(){ # Run configuration commands
+    if [ $# -gt 1 ]; then
+        echo "[#]" $2
+    else
+        echo "[#]" $1
+    fi
+    if [ "$visualize" == "false" ]; then eval $1; fi
+}
 new(){
-    echo "Not implemented"
+    # Mandatory args
+    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+        help=true
+        return
+    fi
+    interface_name=$1
+    shift
+    # Optional args
+    address=10.0.0.1
+    port=51820
+    forwarding_interface=false
+    while [ $# -gt 0 ] ; do
+        case "$1" in
+            -a) shift; address=$1;;
+            -p) shift; port=$1;;
+            -f) shift; forwarding_interface=$1;;
+        esac
+        shift
+    done
+
+    # Commands
+    private_key=`wg genkey`
+    public_key=`echo "$private_key" | wg pubkey`
+    echo "Server public Key: $public_key"
+
+    check_run "ufw allow $port/udp && sudo ufw enable"
+
+    check_run "printf \"[Interface]\nAddress = ${address}\nListenPort = ${port}\nPrivateKey = ${private_key}\" >> /etc/wireguard/${interface_name}.conf" "printf \"[Interface]\"... > /etc/wireguard/${interface_name}.conf"
+    unset -v private_key
+
+    if [ "$forwarding_interface" != "false" ]; then
+        check_run "sysctl -w net.ipv4.ip_forward=1"
+        check_run "printf \"PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE\nPostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE\" >> /etc/wireguard/${interface_name}.conf" "printf \"PostUp\"... >> /etc/wireguard/${interface_name}.conf"
+    fi
+
+    check_run "wg-quick up ${interface_name}"
 }
 enable(){
-    echo "Not implemented"
+    # Mandatory args
+    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+        help=true
+        return
+    fi
+    interface_name=$1
+    check_run "wg-quick up ${interface_name}"
 }
 disable(){
-    echo "Not implemented"
+    # Mandatory args
+    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+        help=true
+        return
+    fi
+    interface_name=$1
+    check_run "wg-quick down ${interface_name}"
 }
 enable-forwarding(){
     echo "Not implemented"
@@ -45,7 +92,18 @@ disable-forwarding(){
     echo "Not implemented"
 }
 remove(){
-    echo "Not implemented"
+    # Mandatory args
+    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+        help=true
+        return
+    fi
+    interface_name=$1
+    read -p "Confirm by retyping the interface name: " confirmation
+    if [ "$confirmation" != "$interface_name" ]; then echo "Aborted." && return; fi
+
+    check_run "wg-quick down ${interface_name}"
+    check_run "rm /etc/wireguard/${interface_name}.conf"
+    echo "To completely remove the VPN configuration please close the port by removing the UFW rule: 'ufw status' && 'ufw delete RULE'"
 }
 peer-new(){
     echo "Not implemented"

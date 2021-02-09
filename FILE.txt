@@ -1,0 +1,2 @@
+PostUp = iptables -A FORWARD -i 0 -j ACCEPT; iptables -A FORWARD -o 0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i 0 -j ACCEPT; iptables -D FORWARD -o 0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE

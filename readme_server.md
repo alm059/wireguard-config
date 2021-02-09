@@ -7,6 +7,7 @@ Syntax
 Description  
     Taking advantage of the simplicity of WireGuard, this script aims to simplify basic operations, with common options which should suit most use cases, for the VPN creation, configuration, management and removal of WireGuard interfaces with single commands.  
     This intends to be a basic configurator which tries to abstract the firewall and system configuration from the user, and it will always manage the VPN by editing a file in /etc/wireguard/[interface name].conf where interface name is the name set by the user. Most customizations which can be carried out in the conf file (such as editing peer data, modifying interfaces or altering IPs) at present are out of the scope of this project. There is rich documentation available for WireGuard in their sites, in the man command for wg, or learning from the multiple sources available online to manually understand and edit the conf file.  
+    
 
 Requirements  
     SUDO access  
@@ -19,7 +20,7 @@ Options
     -h|--help  
         Get general help or command specific help  
     -v|--visualize  
-        visualize commands that will be ran instead of executing them  
+        visualize commands that will be ran without modifying the existing environment
 
 Commands and Arguments  
     new {<interface-name>} [-a <address>] [-p <port>] [-f <forwarding-interface>]  
@@ -28,9 +29,9 @@ Commands and Arguments
         The port specifies the listening port for this interface of WireGuard. Default is 51820.
         The forwarding-interface specifies the interface to route traffic through which is not directed to this server. If not set, forwarding will be disabled for this interface until it is manually enabled with the enable-forwarding command.
     enable {<interface-name>}
-        Enables an existent, but disabled interface.  
+        Alias for wg-quick up. Enables an existent, but disabled interface.  
     disable {<interface-name>}  
-        Disables an interface without deleting it.  
+        Alias for wg-quick down. Disables an interface without deleting it.  
     enable-forwarding {<interface-name>} {<forwarding-interface>}  
         Enables traffic forwarding. This enables peers to route all traffic through the encrypted tunnel interface and reach their destination. Will also allow peers to reach devices in the LAN.  
     disable-forwarding {<interface-name>}  
