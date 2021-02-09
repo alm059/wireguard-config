@@ -26,7 +26,9 @@ help=false
 visualize=false
 syntax=false # While false it hasn't found any command
 
-
+# check_visualize(){
+#
+# }
 new(){
     echo "Not implemented"
 }
@@ -67,63 +69,43 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
         # COMMANDS
         new)
             syntax="new {<interface-name>} [-a <address>] [-p <port>] [-f <forwarding-interface>]"
-            if [ $help != "true" ]; then
-                new();
-            fi
+            if [ "$help" != "true" ] ; then shift; new $*; fi # if help needed, don't execute
         ;;
         enable)
             syntax="enable {<interface-name>}"
-            if [ $help != "true" ]; then
-                enable();
-            fi
+            if [ "$help" != "true" ] ; then shift; enable $*; fi
         ;;
         disable)
             syntax="disable {<interface-name>}"
-            if [ $help != "true" ]; then
-                disable();
-            fi
+            if [ $help != "true" ]; then shift; disable $*; fi
         ;;
         enable-forwarding)
             syntax="enable-forwarding {<interface-name>} {<forwarding-interface>}"
-            if [ $help != "true" ]; then
-                enable-forwarding();
-            fi
+            if [ $help != "true" ]; then shift; enable-forwarding $*; fi
         ;;
         disable-forwarding)
             syntax="disable-forwarding {<interface-name>}"
-            if [ $help != "true" ]; then
-                disable-forwarding();
-            fi
+            if [ $help != "true" ]; then shift; disable-forwarding $*; fi
         ;;
         remove)
             syntax="remove {<interface-name>}"
-            if [ $help != "true" ]; then
-                remove();
-            fi
+            if [ $help != "true" ]; then shift; remove $*; fi
         ;;
         peer-new)
             syntax="peer-new {<interface-name>} {-f <public key file> | -k <public key>} {-i <peer-ip>} [-n <name or identifier>]"
-            if [ $help != "true" ]; then
-                peer-new();
-            fi
+            if [ $help != "true" ]; then shift; peer-new $*; fi
         ;;
         peer-enable)
             syntax="peer-enable {<interface-name>} {-i <peer-ip> | -n <name or identifier>}"
-            if [ $help != "true" ]; then
-                peer-enable();
-            fi
+            if [ $help != "true" ]; then shift; peer-enable $*; fi
         ;;
         peer-disable)
             syntax="peer-disable {<interface-name>} {-i <peer-ip> | -n <name or identifier>}"
-            if [ $help != "true" ]; then
-                peer-disable();
-            fi
+            if [ $help != "true" ]; then shift; peer-disable $*; fi
         ;;
         peer-remove)
             syntax="peer-remove {<interface-name>} {-i <peer-ip> | -n <name or identifier>}"
-            if [ $help != "true" ]; then
-                peer-remove();
-            fi
+            if [ $help != "true" ]; then shift; peer-remove $*; fi
         ;;
         *)
             if [ ! -z $1 ] ; then # Avoid flagging stopping on empty arguments
