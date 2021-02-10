@@ -2,13 +2,12 @@ Definition
     wg-config: manage wireguard interfaces with a single command  
 
 Syntax  
-    bash wireguard_server.sh [options] <command> <arguments> [optional arguments]  
+    bash wg-config.sh [options] <command> <arguments> [optional arguments]  
 
 Description  
-    Taking advantage of the simplicity of WireGuard, this script aims to simplify basic operations, with common options which should suit most use cases, for the VPN creation, management and removal of WireGuard interfaces with single commands.  
+    Taking advantage of the simplicity of WireGuard, this script aims to simplify the creation, management and removal of VPN interfaces with common options to suit most use cases.
     It is not intended as means to replace the wg or wg-quick commands, but to complement them.
-    The objective is to abstract the firewall and system configuration from the user, and it will always manage the VPN by editing a file in /etc/wireguard/[interface name].conf where interface name is the name set by the user. Most customizations which can be carried out in the conf file (such as editing peer data, modifying interfaces or altering IPs) at present are out of the scope of this project. There is rich documentation available for WireGuard in their sites, in the man command for wg, or learning from the multiple sources available online to manually understand and edit the conf file.  
-
+    The objective is to abstract the firewall and system configuration, and it will always manage the VPN by editing a file in /etc/wireguard/[interface name].conf where interface name is the name set by the user. Most customizations such as editing peer data, modifying interfaces or altering IPs at present are out of the scope of this project, but can be easily carried out modifying the conf file. There is rich documentation available for WireGuard in their sites, in the man command for wg, or learning from the multiple sources available online to manually understand and edit this file.  
 
 Requirements  
     SUDO access  
