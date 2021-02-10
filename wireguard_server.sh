@@ -6,9 +6,9 @@ syntax=false # While false it hasn't found any command on the execution thread
 
 check_run(){ # Run configuration commands
     if [ $# -gt 1 ]; then
-        echo "[#]" $2
+        echo "[wg-conf]" $2
     else
-        echo "[#]" $1
+        echo "[wg-conf]" $1
     fi
     if [ "$visualize" == "false" ]; then eval $1; fi
 }
@@ -31,6 +31,7 @@ new(){
         return
     fi
     interface_name=$1
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     shift
     # Optional args
     address=10.0.0.1
@@ -70,6 +71,7 @@ enable-forwarding(){
         return
     fi
     interface_name=$1
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     forwarding_interface=$2
 
     if [ ! -f /etc/wireguard/${interface_name}.conf ]; then
@@ -98,9 +100,11 @@ enable-forwarding(){
 
     file="[Interface]\nPostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE\nPostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE\n"${file}
     echo "Adding PostUp and Post down rules to ${interface_name}.conf"
-    check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
+    check_run "wg-quick down ${interface_name}"
+    check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf" "printf file > /etc/wireguard/${interface_name}.conf"
     echo "Allowing traffic forwarding at system level"
     check_run "sysctl -w net.ipv4.ip_forward=1"
+    check_run "wg-quick up ${interface_name}"
 }
 disable-forwarding(){
     # Mandatory args
@@ -109,6 +113,7 @@ disable-forwarding(){
         return
     fi
     interface_name=$1
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
 
     if [ ! -f /etc/wireguard/${interface_name}.conf ]; then
         echo "Interface config file not found"
@@ -130,7 +135,9 @@ disable-forwarding(){
 
 
     if [ $forwarded == "true" ]; then
-        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
+        check_run "wg-quick down ${interface_name}"
+        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf" "printf file > /etc/wireguard/${interface_name}.conf"
+        check_run "wg-quick up ${interface_name}"
         echo "Removed PostUp and Post down rules from ${interface_name}.conf"
     else
         echo "Could not find redirection rules in the config file"
@@ -144,6 +151,7 @@ remove(){
         return
     fi
     interface_name=$1
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     if [ ! -f /etc/wireguard/${interface_name}.conf ]; then
         echo "Interface config file not found"
         return
@@ -168,6 +176,7 @@ peer-new(){
         return
     fi
     interface_name=$1
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     shift
     # Labelled args
     public_key=false
@@ -222,7 +231,9 @@ peer-new(){
         fi
     done < /etc/wireguard/${interface_name}.conf;
 
-    check_run "printf \"\n${peer}\" >> /etc/wireguard/${interface_name}.conf";
+    check_run "wg-quick down ${interface_name}"
+    check_run "printf \"\n${peer}\" >> /etc/wireguard/${interface_name}.conf" "printf peer > /etc/wireguard/${interface_name}.conf";
+    check_run "wg-quick up ${interface_name}"
     echo "Peer added to ${interface_name}.conf"
 }
 peer-enable(){
@@ -232,6 +243,7 @@ peer-enable(){
         return
     fi
     interface_name=$1
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     shift
     ip=""
     name=""
@@ -306,7 +318,9 @@ peer-enable(){
     fi
 
     if [ "$peer_enabled" != "false" ]; then
-        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
+        check_run "wg-quick down ${interface_name}"
+        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf" "printf file > /etc/wireguard/${interface_name}.conf"
+        check_run "wg-quick up ${interface_name}"
         echo "Enabled peer ${name} ${ip} from ${interface_name}.conf"
     else
         echo "Peer not found"
@@ -319,6 +333,7 @@ peer-disable(){
         return
     fi
     interface_name=$1
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     shift
     ip=""
     name=""
@@ -385,7 +400,9 @@ peer-disable(){
     fi
 
     if [ "$peer_disabled" != "false" ]; then
-        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
+        check_run "wg-quick down ${interface_name}"
+        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf" "printf file > /etc/wireguard/${interface_name}.conf"
+        check_run "wg-quick up ${interface_name}"
         echo "Disabled peer ${name} ${ip} from ${interface_name}.conf"
     else
         echo "Peer not found"
@@ -398,6 +415,7 @@ peer-remove(){
         return
     fi
     interface_name=$1
+    printf "\n\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     shift
     ip=""
     name=""
@@ -430,7 +448,9 @@ peer-remove(){
             else # peer line
                 if [[ "$line" == *"[Peer]"* ]]; then # new peer
                     # Reset
-                    file="${file}${peer_temp}\n"
+                    if [ "$peer_temp_delete" == "false" ]; then
+                        file="${file}${peer_temp}\n"
+                    fi
                     peer_temp_delete=false
                     peer_temp=""
                     peer_count=$peer_count+1
@@ -444,7 +464,6 @@ peer-remove(){
                     else
                         peer_deleted=$peer_count
                     fi
-                    peer_temp="" # clear peer
                 fi
 
                 if [ "$peer_temp_delete" == "false" ]; then # The peer is safe
@@ -453,10 +472,14 @@ peer-remove(){
             fi
         fi
     done < /etc/wireguard/${interface_name}.conf;
-    file="${file}${peer_temp}\n"
+    if [ "$peer_temp_delete" == "false" ]; then
+        file="${file}${peer_temp}\n"
+    fi
 
     if [ "$peer_deleted" != "false" ]; then
-        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
+        check_run "wg-quick down ${interface_name}"
+        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf" "printf file > /etc/wireguard/${interface_name}.conf"
+        check_run "wg-quick up ${interface_name}"
         echo "Removed peer ${name} ${ip} from ${interface_name}.conf"
     else
         echo "Peer not found"
