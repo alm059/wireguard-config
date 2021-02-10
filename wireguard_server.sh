@@ -226,7 +226,91 @@ peer-new(){
     echo "Peer added to ${interface_name}.conf"
 }
 peer-enable(){
-    echo "Not implemented"
+    # Mandatory args
+    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+        help=true
+        return
+    fi
+    interface_name=$1
+    shift
+    ip=""
+    name=""
+    while [ $# -gt 0 ] ; do
+        case "$1" in
+            -n) shift; name=$1;;
+            -i) shift; ip=$1;;
+        esac
+        shift
+    done
+    if [ "$ip" == "" ] && [ "$name" == "" ]; then
+        help=true
+        return
+    fi
+    if [ ! -f /etc/wireguard/${interface_name}.conf ]; then
+        echo "Interface config file not found"
+        return
+    fi
+
+    file=""
+    peer_temp=""
+    peer_temp_enabled="" # copy of peer temp but enabled
+    peer_temp_enable=false
+    peer_enabled=false
+    peer_count=0
+
+    while read line; do
+        if [ "$line" != "" ]; then
+            # Start of a commented peer line or analizing a commented peer line
+            if [[ "$line" == "# [Peer]"* ]] || [ "$peer_temp" != "" ]; then
+                # Reset previous peer (add to file) and initiate new
+                if [[ "$line" == *"[Peer]"* ]]; then
+                    if [ "$peer_temp_enable" == "true" ]; then
+                        file="${file}${peer_temp_enabled}\n"
+                    else
+                        file="${file}${peer_temp}\n"
+                    fi
+                    peer_temp=""
+                    peer_temp_enabled=""
+                    peer_temp_enable=false
+                    peer_count=$peer_count+1
+                    # If new peer is not disabled, ignore peer analysis
+                    if [[ "$line" != "#"* ]]; then
+                        file="${file}${line}\n"
+                        continue
+                    fi
+                fi
+
+                # Check if line of peer meets criteria
+                if [[ "$line" == "# AllowedIPs"* ]] && [[ "$line" == *"${ip}"* ]] || [ "$line" == "# ${name}" ]; then
+                    peer_temp_enable=true
+                    # check if a different peer has been flagged for enabling
+                    if [ $peer_enabled != "false" ] && [ "$peer_count" != "$peer_enabled" ]; then
+                        echo "Aborted. Multiple peers meet the same criteria"
+                        return
+                    fi
+                    peer_enabled=$peer_count
+                fi
+
+                # Add line to temp peer line
+                peer_temp="${peer_temp}${line}\n"
+                peer_temp_enabled="${peer_temp_enabled}${line:2}\n"
+            else # Line not belonging to disabled peer
+                file="${file}${line}\n"
+            fi
+        fi
+    done < /etc/wireguard/${interface_name}.conf;
+    if [ "$peer_temp_enable" == "true" ]; then
+        file="${file}${peer_temp_enabled}\n"
+    else
+        file="${file}${peer_temp}\n"
+    fi
+
+    if [ "$peer_enabled" != "false" ]; then
+        printf "$file" > /etc/wireguard/${interface_name}.conf
+        echo "Enabled peer ${name} ${ip} from ${interface_name}.conf"
+    else
+        echo "Peer not found"
+    fi
 }
 peer-disable(){
     # Mandatory args
@@ -260,7 +344,6 @@ peer-disable(){
     peer_temp_disable=false
     peer_disabled=false
     peer_count=0
-    forwarded=false
 
     while read line; do
         if [ "$line" != "" ]; then
@@ -278,7 +361,7 @@ peer-disable(){
                     peer_temp=""
                     peer_temp_disabled=""
                     peer_count=$peer_count+1
-                # \/ check if peer meets disabled criteria
+                # \/ check if peer meets disabled criteria. cannot find those disabled
                 elif [[ "$line" == "AllowedIPs"* ]] && [[ "$line" == *"${ip}"* ]] || [ "$line" == "# ${name}" ]; then
                     peer_temp_disable=true
                     # \/ check if a different peer has been flagged for disabled
@@ -339,7 +422,6 @@ peer-remove(){
     peer_temp_delete=false
     peer_deleted=false
     peer_count=0
-    forwarded=false
 
     while read line; do
         if [ "$line" != "" ]; then
@@ -352,7 +434,7 @@ peer-remove(){
                     peer_temp_delete=false
                     peer_temp=""
                     peer_count=$peer_count+1
-                # \/ check if peer meets deletion criteria
+                # \/ check if peer meets deletion criteria. can find those disabled
                 elif [[ "$line" == *"AllowedIPs"* ]] && [[ "$line" == *"${ip}"* ]] || [ "$line" == *"# ${name}" ]; then
                     peer_temp_delete=true
                     # \/ check if a different peer has been flagged for deletion
