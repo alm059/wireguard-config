@@ -229,7 +229,84 @@ peer-enable(){
     echo "Not implemented"
 }
 peer-disable(){
-    echo "Not implemented"
+    # Mandatory args
+    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+        help=true
+        return
+    fi
+    interface_name=$1
+    shift
+    ip=""
+    name=""
+    while [ $# -gt 0 ] ; do
+        case "$1" in
+            -n) shift; name=$1;;
+            -i) shift; ip=$1;;
+        esac
+        shift
+    done
+    if [ "$ip" == "" ] && [ "$name" == "" ]; then
+        help=true
+        return
+    fi
+    if [ ! -f /etc/wireguard/${interface_name}.conf ]; then
+        echo "Interface config file not found"
+        return
+    fi
+
+    file=""
+    peer_temp=""
+    peer_temp_disabled=""
+    peer_temp_disable=false
+    peer_disabled=false
+    peer_count=0
+    forwarded=false
+
+    while read line; do
+        if [ "$line" != "" ]; then
+            if [ "$peer_temp" == "" ] && [[ "$line" != "[Peer]"* ]]; then #pre-peer line
+                file="${file}${line}\n"
+            else # peer line
+                if [[ "$line" == *"[Peer]"* ]]; then # new peer
+                    # Reset
+                    if [ "$peer_temp_disable" == "true" ]; then
+                        file="${file}${peer_temp_disabled}\n"
+                    else
+                        file="${file}${peer_temp}\n"
+                    fi
+                    peer_temp_disable=false
+                    peer_temp=""
+                    peer_temp_disabled=""
+                    peer_count=$peer_count+1
+                # \/ check if peer meets disabled criteria
+                elif [[ "$line" == "AllowedIPs"* ]] && [[ "$line" == *"${ip}"* ]] || [ "$line" == "# ${name}" ]; then
+                    peer_temp_disable=true
+                    # \/ check if a different peer has been flagged for disabled
+                    if [ $peer_disabled != "false" ] && [ "$peer_count" != "$peer_disabled" ]; then
+                        echo "Aborted. Multiple peers meet the same criteria"
+                        return
+                    else
+                        peer_disabled=$peer_count
+                    fi
+                fi
+
+                peer_temp="${peer_temp}${line}\n"
+                peer_temp_disabled="${peer_temp_disabled}# ${line}\n"
+            fi
+        fi
+    done < /etc/wireguard/${interface_name}.conf;
+    if [ "$peer_temp_disable" == "true" ]; then
+        file="${file}${peer_temp_disabled}\n"
+    else
+        file="${file}${peer_temp}\n"
+    fi
+
+    if [ "$peer_disabled" != "false" ]; then
+        printf "$file" > /etc/wireguard/${interface_name}.conf
+        echo "Disabled peer ${name} ${ip} from ${interface_name}.conf"
+    else
+        echo "Peer not found"
+    fi
 }
 peer-remove(){
     # Mandatory args
@@ -266,17 +343,17 @@ peer-remove(){
 
     while read line; do
         if [ "$line" != "" ]; then
-            if [ "$peer_temp" == "" ] && [[ "$line" != "[Peer]"* ]]; then #pre-peer line
+            if [ "$peer_temp" == "" ] && [[ "$line" != *"[Peer]"* ]]; then #pre-peer line
                 file="${file}${line}\n"
             else # peer line
-                if [[ "$line" == "[Peer]"* ]]; then # new peer
+                if [[ "$line" == *"[Peer]"* ]]; then # new peer
                     # Reset
                     file="${file}${peer_temp}\n"
                     peer_temp_delete=false
                     peer_temp=""
                     peer_count=$peer_count+1
                 # \/ check if peer meets deletion criteria
-                elif [[ "$line" == "AllowedIPs"* ]] && [[ "$line" == *"${ip}"* ]] || [ "$line" == "# ${name}" ]; then
+                elif [[ "$line" == *"AllowedIPs"* ]] && [[ "$line" == *"${ip}"* ]] || [ "$line" == *"# ${name}" ]; then
                     peer_temp_delete=true
                     # \/ check if a different peer has been flagged for deletion
                     if [ $peer_deleted != "false" ] && [ "$peer_count" != "$peer_deleted" ]; then
@@ -296,8 +373,12 @@ peer-remove(){
     done < /etc/wireguard/${interface_name}.conf;
     file="${file}${peer_temp}\n"
 
-    printf "$file"
-
+    if [ "$peer_deleted" != "false" ]; then
+        printf "$file" > /etc/wireguard/${interface_name}.conf
+        echo "Removed peer ${name} ${ip} from ${interface_name}.conf"
+    else
+        echo "Peer not found"
+    fi
 }
 
 
