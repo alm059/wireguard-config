@@ -23,3 +23,15 @@ gen_qr() {
 }
 
 # allow client to export pubkey to file
+# cat > ${client_config} <<EOF && chmod 600 ${client_config}
+# [Interface]
+# Address = ${client_wg_ip}/${cidr}
+# PrivateKey = $(head -1 ${client_private_key})
+# DNS = $(echo ${client_dns_ips} | sed -E 's/ +/, /g')
+# [Peer]
+# PublicKey = $(head -1 ${server_public_key})
+# PresharedKey = $(head -1 ${preshared_key})
+# AllowedIPs = $(echo ${client_allowed_ips} | sed -E 's/ +/, /g')
+# Endpoint = ${server_public_ip}:${server_port}
+# PersistentKeepalive = 25
+# EOF
