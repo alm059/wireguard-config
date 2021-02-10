@@ -98,9 +98,9 @@ enable-forwarding(){
 
     file="[Interface]\nPostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE\nPostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE\n"${file}
     echo "Adding PostUp and Post down rules to ${interface_name}.conf"
-    printf "$file" > /etc/wireguard/${interface_name}.conf
+    check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
     echo "Allowing traffic forwarding at system level"
-    sysctl -w net.ipv4.ip_forward=1
+    check_run "sysctl -w net.ipv4.ip_forward=1"
 }
 disable-forwarding(){
     # Mandatory args
@@ -130,7 +130,7 @@ disable-forwarding(){
 
 
     if [ $forwarded == "true" ]; then
-        printf "$file" > /etc/wireguard/${interface_name}.conf
+        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
         echo "Removed PostUp and Post down rules from ${interface_name}.conf"
     else
         echo "Could not find redirection rules in the config file"
@@ -222,7 +222,7 @@ peer-new(){
         fi
     done < /etc/wireguard/${interface_name}.conf;
 
-    printf "\n${peer}" >> /etc/wireguard/${interface_name}.conf;
+    check_run "printf \"\n${peer}\" >> /etc/wireguard/${interface_name}.conf";
     echo "Peer added to ${interface_name}.conf"
 }
 peer-enable(){
@@ -306,7 +306,7 @@ peer-enable(){
     fi
 
     if [ "$peer_enabled" != "false" ]; then
-        printf "$file" > /etc/wireguard/${interface_name}.conf
+        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
         echo "Enabled peer ${name} ${ip} from ${interface_name}.conf"
     else
         echo "Peer not found"
@@ -385,7 +385,7 @@ peer-disable(){
     fi
 
     if [ "$peer_disabled" != "false" ]; then
-        printf "$file" > /etc/wireguard/${interface_name}.conf
+        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
         echo "Disabled peer ${name} ${ip} from ${interface_name}.conf"
     else
         echo "Peer not found"
@@ -456,7 +456,7 @@ peer-remove(){
     file="${file}${peer_temp}\n"
 
     if [ "$peer_deleted" != "false" ]; then
-        printf "$file" > /etc/wireguard/${interface_name}.conf
+        check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf"
         echo "Removed peer ${name} ${ip} from ${interface_name}.conf"
     else
         echo "Peer not found"
