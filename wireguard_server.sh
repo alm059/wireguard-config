@@ -61,21 +61,78 @@ new(){
 
     check_run "ufw allow $port/udp && sudo ufw enable"
 
-    check_run "printf \"[Interface]\nAddress = ${address}\nListenPort = ${port}\nPrivateKey = ${private_key}\" >> /etc/wireguard/${interface_name}.conf" "printf \"[Interface]\"... > /etc/wireguard/${interface_name}.conf"
+    check_run "printf \"[Interface]\nAddress = ${address}\nListenPort = ${port}\nPrivateKey = ${private_key}\n\" > /etc/wireguard/${interface_name}.conf" "printf \"[Interface]\"... > /etc/wireguard/${interface_name}.conf"
     unset -v private_key
 
     if [ "$forwarding_interface" != "false" ]; then
         check_run "sysctl -w net.ipv4.ip_forward=1"
-        check_run "printf \"PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE\nPostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE\" >> /etc/wireguard/${interface_name}.conf" "printf \"PostUp\"... >> /etc/wireguard/${interface_name}.conf"
+        check_run "printf \"PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE\nPostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE\n\" >> /etc/wireguard/${interface_name}.conf" "printf \"PostUp\"... >> /etc/wireguard/${interface_name}.conf"
     fi
 
     check_run "wg-quick up ${interface_name}"
 }
 enable-forwarding(){
-    echo "Not implemented"
+    # Mandatory args
+    if [ ! $# -ge 2 ] || [[ "$1" == "-"* ]] || [[ "$2" == "-"* ]] ; then
+        help=true
+        return
+    fi
+    interface_name=$1
+    forwarding_interface=$2
+
+    file=""
+    forwarded=false
+
+    while read line; do
+        if [ "$line" != "" ]; then
+            if [[ "$line" != "[Interface]"* ]]; then
+                file="${file}${line}\n"
+            fi
+            if [[ "$line" == *"PostUp"* ]] || [[ "$line" == *"PostDown"* ]]; then
+                forwarded=true
+            fi
+        fi
+    done < /etc/wireguard/${interface_name}.conf;
+
+    if [ $forwarded == "true" ]; then
+        echo "Traffic forwarding could already be enabled (PostUp/Down exists)"
+        return
+    fi
+
+    file="[Interface]\nPostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE\nPostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE\n"${file}
+    echo "Adding PostUp and Post down rules to ${interface_name}.config"
+    printf "$file" > /etc/wireguard/${interface_name}.conf
+    echo "Allowing traffic forwarding at system level"
+    sysctl -w net.ipv4.ip_forward=1
 }
 disable-forwarding(){
-    echo "Not implemented"
+    # Mandatory args
+    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+        help=true
+        return
+    fi
+    interface_name=$1
+
+    file=""
+    forwarded=false
+
+    while read line; do
+        if [ "$line" != "" ]; then
+            if [[ "$line" == *"PostUp"* ]] || [[ "$line" == *"PostDown"* ]]; then
+                forwarded=true
+            else
+                file="${file}${line}\n"
+            fi
+        fi
+    done < /etc/wireguard/${interface_name}.conf;
+
+    if [ $forwarded == "true" ]; then
+        printf "$file" > /etc/wireguard/${interface_name}.conf
+        echo "Removed PostUp and Post down rules from ${interface_name}.config"
+    else
+        echo "Could not find redirection rules in the config file"
+    fi
+    echo "If you wish to disable traffic forwarding at system level (for all interfaces) execute: sudo sysctl -w net.ipv4.ip_forward=0"
 }
 remove(){
     # Mandatory args
