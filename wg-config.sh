@@ -31,7 +31,6 @@ new(){
         return
     fi
     interface_name=$1
-    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     shift
     # Optional args
     address=10.0.0.1
@@ -71,13 +70,13 @@ enable-forwarding(){
         return
     fi
     interface_name=$1
-    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     forwarding_interface=$2
 
     if [ ! -f /etc/wireguard/${interface_name}.conf ]; then
         echo "Interface config file not found"
         return
     fi
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
 
     file=""
     forwarded=false
@@ -113,12 +112,12 @@ disable-forwarding(){
         return
     fi
     interface_name=$1
-    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
 
     if [ ! -f /etc/wireguard/${interface_name}.conf ]; then
         echo "Interface config file not found"
         return
     fi
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
 
     file=""
     forwarded=false
@@ -151,11 +150,11 @@ remove(){
         return
     fi
     interface_name=$1
-    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     if [ ! -f /etc/wireguard/${interface_name}.conf ]; then
         echo "Interface config file not found"
         return
     fi
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
 
     read -p "Retype the interface name to confirm: " confirmation
     if [ "$confirmation" != "$interface_name" ]; then echo "Aborted." && return; fi
@@ -176,7 +175,6 @@ peer-new(){
         return
     fi
     interface_name=$1
-    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     shift
     # Labelled args
     public_key=false
@@ -213,6 +211,8 @@ peer-new(){
         return
     fi
 
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
+
     # Commands
     peer="[Peer]\n${name}PublicKey = ${public_key}\nAllowedIPs = ${ip}\n"
 
@@ -243,7 +243,6 @@ peer-enable(){
         return
     fi
     interface_name=$1
-    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     shift
     ip=""
     name=""
@@ -262,6 +261,7 @@ peer-enable(){
         echo "Interface config file not found"
         return
     fi
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
 
     file=""
     peer_temp=""
@@ -333,7 +333,6 @@ peer-disable(){
         return
     fi
     interface_name=$1
-    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
     shift
     ip=""
     name=""
@@ -352,6 +351,7 @@ peer-disable(){
         echo "Interface config file not found"
         return
     fi
+    printf "\n" >> "/etc/wireguard/${interface_name}.conf" # Add a line at the end of the file to prevent reading problems
 
     file=""
     peer_temp=""
