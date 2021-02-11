@@ -9,13 +9,99 @@ keepalive="-1"
 
 help=false
 syntax=false
-
+client_public_key=""
 
 new(){
-    echo hi
+    # Mandatory args
+    if [ ! $# -ge 4 ] || [[ "$1" == "-"* ]] || [[ "$2" == "-"* ]] || [[ "$3" != "-"* ]] || [[ "$4" == "-"* ]]; then
+        help=true
+        return
+    fi
+    client_ip="$1"
+    endpoint="$2"
+    shift;shift;
+
+    server_public_key=""
+    zip_location=""
+    qr_location=""
+    conf_location=""
+    save_pubkey="false"
+
+    while [ $# -gt 0 ] ; do
+        case "$1" in
+            -f) shift;
+                if [ -f $1 ]; then
+                    server_public_key=$(<$1)
+                else
+                    echo "Public key file does not exist"; return
+                fi
+            ;;
+            -k) shift; server_public_key=$1;;
+            -z) shift; zip_location=$1;;
+            -q) shift; qr_location=$1;;
+            -c) shift; conf_location=$1;;
+            -s) shift; save_pubkey=$1;;
+            -d) shift; dns=$1;;
+            -a) shift; allowed_ips=$1;;
+            -p) shift; keepalive=$1;;
+        esac
+        shift
+    done
+
+    if [ "$server_public_key" == "" ]; then
+        help=true
+        return
+    fi
+
+    # Commands
+    private_key=`wg genkey`
+    client_public_key=`echo "$private_key" | wg pubkey`
+    echo "Client public Key: $client_public_key"
+
+    file="[Interface]\nAddress = ${client_ip}\nPrivateKey = ${private_key}\nDNS = ${dns}\n\n[Peer]\nPublicKey = ${server_public_key}\nAllowedIPs = ${allowed_ips}\nEndpoint = ${endpoint}\nPersistentKeepalive = ${keepalive}\n";
+
+    unset -v private_key
+
+    # Export conf file
+    if [ "$zip_location" != "" ]; then
+        if [ -f "${zip_location}.conf" ] || [ -f "${zip_location}.zip" ];then
+            echo "Filename exists. Could not create ZIP."
+        else
+            printf "$file" >> "${zip_location}.conf"
+            zip "${zip_location}.zip" "${zip_location}.conf"
+            $zip_location=""
+            rm "${zip_location}.conf"
+        fi
+    fi
+    if [ "$qr_location" != "" ]; then
+        if [ -f "${qr_location}.png" ];then
+            echo "Filename exists. Could not export QR."
+            $qr_location=""
+        else
+            qrencode -o ${qr_location}.png -t png "$file"
+        fi
+    fi
+    if [ "$conf_location" != "" ]; then
+        if [ -f "${conf_location}.conf" ];then
+            echo "Filename exists. Could not create config file."
+            $conf_location=""
+        else
+            printf "$file" >> "${conf_location}.conf"
+        fi
+    fi
+    # Could not export, or not set to export
+    if [ "$zip_location" == "" ] && [ "$qr_location" == "" ] && [ "$conf_location" == "" ]; then
+        qrencode -t ansiutf8 "$file";
+        echo "### File Contents ###"
+        printf "$file";
+    fi
+
 }
 new-push(){
-    echo hi
+    interface_name=$1
+    shift;
+    server_public_key=""
+    new $* -k $server_public_key
 }
 
 
@@ -25,12 +111,12 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
         -h|--help) help=true ;;
         # COMMANDS
         new)
-            syntax="new {<client-ip-address>} {<server endpoint>} {-f <server-pubkey-file> | -k <server-pubkey>} {-z <zip-conf> | -q <qr-conf> | -c <conf-file>} [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>]"
+            syntax="new {<client-ip-address>} {<server endpoint:port>} {-f <server-pubkey-file> | -k <server-pubkey>} [-z <zip-conf> | -q <qr-conf> | -c <conf-file>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>]"
             if [ $help != "true" ]; then shift; new $*; fi
         ;;
         new-push)
-            syntax="new-push {<interface-name>} {<client-ip-address>} {<server endpoint>} {-z <conf-zip> | -q <qr-conf> | -c <file-conf>} [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] "
-            if [ $help != "true" ]; then shift; show $*; fi
+            syntax="new-push {<interface-name>} {<client-ip-address>} {<server endpoint:port>} [-z <conf-zip> | -q <qr-conf> | -c <file-conf>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] "
+            if [ $help != "true" ]; then shift; new-push $*; fi
         ;;
         *)
             if [ ! -z $1 ] ; then # Avoid flagging stopping on empty arguments
@@ -50,41 +136,3 @@ elif [ "$help" == "false" ] && [ "$syntax" == "false" ] ; then # Running without
     echo "Syntax: bash client_wg-config.sh [options] <command> <arguments> [optional arguments] ";
 
 fi
-
-# Generate QR code
-# gen_qr() {
-#   local config_name="${1}"
-#   local output="${2}"
-#   local config_path="${WORKING_DIR}/client-${config_name}.conf"
-#
-#   if [[ ! -f ${config_path} ]]; then
-#     echo -e "${RED}ERROR${NONE}: Error while generating QR code, config file ${BLUE}${config_path}${NONE} does not exist!"
-#     exit 1
-#   fi
-#
-#   local options="-o ${config_path}.png"
-#   if [[ ${output} == "-" ]]; then
-#     local options="-t ANSIUTF8 -o -"
-#   fi
-#
-#   cat ${config_path} | qrencode ${options}
-#
-#   if [[ ${output} != "-" ]]; then
-#     chmod 600 ${config_path}.png
-#     echo -e "${GREEN}INFO${NONE}: QR file ${BLUE}${config_path}.png${NONE} has been generated successfully!"
-#   fi
-# }
-
-# allow client to export pubkey to file
-# cat > ${client_config} <<EOF && chmod 600 ${client_config}
-# [Interface]
-# Address = ${client_wg_ip}/${cidr}
-# PrivateKey = $(head -1 ${client_private_key})
-# DNS = $(echo ${client_dns_ips} | sed -E 's/ +/, /g')
-# [Peer]
-# PublicKey = $(head -1 ${server_public_key})
-# PresharedKey = $(head -1 ${preshared_key})
-# AllowedIPs = $(echo ${client_allowed_ips} | sed -E 's/ +/, /g')
-# Endpoint = ${server_public_ip}:${server_port}
-# PersistentKeepalive = 25
-# EOF
