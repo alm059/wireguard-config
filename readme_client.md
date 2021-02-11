@@ -24,6 +24,6 @@ Commands and arguments
         Save publickey saves it as standalone in a given filename.
         Keepalive seconds makes the client send data to the server at least every given seconds. Default is disabled.
         All default values from optional parameters are listed at the beggining of the script and can be changed.
-    new-push {<interface-name>} {<client-ip-address>} {<server endpoint:port>} [-z <conf-zip> | -q <qr-conf> | -c <file-conf>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] [-n <name>]  
+    new-push {<interface-name>} {<client-ip-address>} {<server endpoint:port>} {-f <server-pubkey-file> | -k <server-pubkey>} [-z <conf-zip> | -q <qr-conf> | -c <file-conf>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] [-n <name>]  
         Same as the new command but if executed in the server it will add the peer automatically to the given interface. It requires having the wg-config.sh file in the same directory.
         Optional argument name gives the peer an identifier in the server config.  

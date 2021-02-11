@@ -10,6 +10,7 @@ keepalive="-1"
 help=false
 syntax=false
 client_public_key=""
+client_ip=""
 
 new(){
     # Mandatory args
@@ -58,7 +59,13 @@ new(){
     client_public_key=`echo "$private_key" | wg pubkey`
     echo "Client public Key: $client_public_key"
 
-    file="[Interface]\nAddress = ${client_ip}\nPrivateKey = ${private_key}\nDNS = ${dns}\n\n[Peer]\nPublicKey = ${server_public_key}\nAllowedIPs = ${allowed_ips}\nEndpoint = ${endpoint}\nPersistentKeepalive = ${keepalive}\n";
+    if [ "${keepalive}" == "-1" ]; then
+        keepalive=""
+    else
+        keepalive="PersistentKeepalive = ${keepalive}\n"
+    fi
+
+    file="[Interface]\nAddress = ${client_ip}\nPrivateKey = ${private_key}\nDNS = ${dns}\n\n[Peer]\nPublicKey = ${server_public_key}\nAllowedIPs = ${allowed_ips}\nEndpoint = ${endpoint}\n${keepalive}";
 
     unset -v private_key
 
@@ -66,26 +73,29 @@ new(){
     if [ "$zip_location" != "" ]; then
         if [ -f "${zip_location}.conf" ] || [ -f "${zip_location}.zip" ];then
             echo "Filename exists. Could not create ZIP."
+            zip_location=""
         else
+            echo "Exporting config to ZIP as ${zip_location}"
             printf "$file" >> "${zip_location}.conf"
             zip "${zip_location}.zip" "${zip_location}.conf"
-            $zip_location=""
             rm "${zip_location}.conf"
         fi
     fi
     if [ "$qr_location" != "" ]; then
         if [ -f "${qr_location}.png" ];then
             echo "Filename exists. Could not export QR."
-            $qr_location=""
+            qr_location=""
         else
+            echo "Exporting config to QR as ${qr_location}"
             qrencode -o ${qr_location}.png -t png "$file"
         fi
     fi
     if [ "$conf_location" != "" ]; then
         if [ -f "${conf_location}.conf" ];then
             echo "Filename exists. Could not create config file."
-            $conf_location=""
+            conf_location=""
         else
+            echo "Exporting config to file as ${conf_location}"
             printf "$file" >> "${conf_location}.conf"
         fi
     fi
@@ -94,14 +104,39 @@ new(){
         qrencode -t ansiutf8 "$file";
         echo "### File Contents ###"
         printf "$file";
+        echo "#####################"
     fi
 
 }
 new-push(){
+    # Mandatory args
+    if [ ! $# -ge 5 ] || [[ "$1" == "-"* ]] || [[ "$2" == "-"* ]] || [[ "$3" == "-"* ]] || [[ "$4" != "-"* ]] || [[ "$5" == "-"* ]]; then
+        help=true
+        return
+    fi
     interface_name=$1
     shift;
-    server_public_key=""
-    new $* -k $server_public_key
+
+    new $* # Send all arguments to the new command to create the client configuration file
+
+    # Obtain the name
+    name="Auto-added"
+    while [ $# -gt 0 ] ; do
+        case "$1" in
+            -n) shift; name="#${1}\n";;
+        esac
+        shift
+    done
+
+    echo ""
+    echo "Adding peer to server configuration file at /etc/wireguard/${interface_name}"
+    if [ -f "wg-config.sh" ]; then
+        bash wg-config.sh peer-new ${interface_name} -k ${client_public_key} -i ${client_ip}/32 -n ${name}
+    else
+        peer="[Peer]\n${name}PublicKey = ${client_public_key}\nAllowedIPs = ${client_ip}/32\n\n"
+        printf "$peer" >> "/etc/wireguard/${interface_name}.conf"
+    fi
+
 }
 
 
