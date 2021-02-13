@@ -150,7 +150,7 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
             if [ $help != "true" ]; then shift; new $*; fi
         ;;
         new-push)
-            syntax="new-push {<interface-name>} {<client-ip-address>} {<server endpoint:port>} [-z <conf-zip> | -q <qr-conf> | -c <file-conf>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] "
+            syntax="new-push {<interface-name>} {<client-ip-address>} {<server endpoint:port>} {-f <server-pubkey-file> | -k <server-pubkey>} [-z <conf-zip> | -q <qr-conf> | -c <file-conf>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] "
             if [ $help != "true" ]; then shift; new-push $*; fi
         ;;
         *)
@@ -164,7 +164,8 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
 done
 
 if [ "$help" == "true" ] && [ "$syntax" == "false" ] ; then # Full help
-    echo "Check readme for full help"
+    echo "Syntax: bash client_wg-config.sh [options] <command> <arguments> [optional arguments] ";
+    echo "Available commands: new, new-push"
 elif [ "$help" == "true" ] && [ "$syntax" != "false" ] ; then # Command explanation or wrong args
     echo $syntax
 elif [ "$help" == "false" ] && [ "$syntax" == "false" ] ; then # Running without command or help

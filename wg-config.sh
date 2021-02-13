@@ -57,7 +57,7 @@ new(){
 
     if [ "$forwarding_interface" != "false" ]; then
         check_run "sysctl -w net.ipv4.ip_forward=1"
-        check_run "printf \"PostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE\nPostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE\n\" >> /etc/wireguard/${interface_name}.conf" "printf \"PostUp\"... >> /etc/wireguard/${interface_name}.conf"
+        check_run "printf \"PostUp = iptables -A FORWARD -i %%i -j ACCEPT; iptables -A FORWARD -o %%i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE\nPostDown = iptables -D FORWARD -i %%i -j ACCEPT; iptables -D FORWARD -o %%i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE\n\" >> /etc/wireguard/${interface_name}.conf" "printf \"PostUp\"... >> /etc/wireguard/${interface_name}.conf"
     fi
 
     check_run "wg-quick up ${interface_name}"
@@ -97,7 +97,7 @@ enable-forwarding(){
         return
     fi
 
-    file="[Interface]\nPostUp = iptables -A FORWARD -i %i -j ACCEPT; iptables -A FORWARD -o %i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE\nPostDown = iptables -D FORWARD -i %i -j ACCEPT; iptables -D FORWARD -o %i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE\n"${file}
+    file="[Interface]\nPostUp = iptables -A FORWARD -i %%i -j ACCEPT; iptables -A FORWARD -o %%i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE\nPostDown = iptables -D FORWARD -i %%i -j ACCEPT; iptables -D FORWARD -o %%i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE\n"${file}
     echo "Adding PostUp and Post down rules to ${interface_name}.conf"
     check_run "wg-quick down ${interface_name}"
     check_run "printf \"$file\" > /etc/wireguard/${interface_name}.conf" "printf file > /etc/wireguard/${interface_name}.conf"
@@ -544,7 +544,8 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
 done
 
 if [ "$help" == "true" ] && [ "$syntax" == "false" ] ; then # Full help
-    echo "Check readme for full help"
+    echo "Syntax: bash wireguard_server.sh [options] <command> <arguments> [optional arguments]";
+    echo "Available commands: new, remove, enable-forwarding, disable-forwarding, peer-new, peer-remove, peer-enable, peer-disable, reminder, show"
 elif [ "$help" == "true" ] && [ "$syntax" != "false" ] ; then # Command explanation or wrong args
     echo $syntax
 elif [ "$help" == "false" ] && [ "$syntax" == "false" ] ; then # Running without command or help
