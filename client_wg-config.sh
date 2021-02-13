@@ -110,14 +110,33 @@ new(){
 }
 new-push(){
     # Mandatory args
-    if [ ! $# -ge 5 ] || [[ "$1" == "-"* ]] || [[ "$2" == "-"* ]] || [[ "$3" == "-"* ]] || [[ "$4" != "-"* ]] || [[ "$5" == "-"* ]]; then
+    if [ ! $# -ge 3 ] || [[ "$1" == "-"* ]] || [[ "$2" == "-"* ]] || [[ "$3" == "-"* ]]; then
         help=true
         return
     fi
     interface_name=$1
     shift;
 
-    new $* # Send all arguments to the new command to create the client configuration file
+    # Obtain server public key
+    server_private_key=""
+    done="false"
+    while read line; do
+        if [[ "$line" == "PrivateKey = "* ]]; then
+            server_private_key=${line:13}
+            done="true"
+            break
+        fi
+    done < /etc/wireguard/${interface_name}.conf;
+
+    if [ "$done" == "false" ]; then
+        echo "Error parsing the configuration file. Please "
+        return
+    fi
+
+    server_public_key=$(echo ${server_private_key} | wg pubkey)
+    unset -v server_private_key
+
+    new $* -k $server_public_key # Send all arguments to the new command to create the client configuration file
 
     # Obtain the name
     name="Auto-added"
@@ -134,7 +153,9 @@ new-push(){
         bash wg-config.sh peer-new ${interface_name} -k ${client_public_key} -i ${client_ip}/32 -n ${name}
     else
         peer="[Peer]\n${name}PublicKey = ${client_public_key}\nAllowedIPs = ${client_ip}/32\n\n"
+        wg-quick down ${interface_name}
         printf "$peer" >> "/etc/wireguard/${interface_name}.conf"
+        wg-quick up ${interface_name}
     fi
 
 }
@@ -150,7 +171,7 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
             if [ $help != "true" ]; then shift; new $*; fi
         ;;
         new-push)
-            syntax="new-push {<interface-name>} {<client-ip-address>} {<server endpoint:port>} {-f <server-pubkey-file> | -k <server-pubkey>} [-z <conf-zip> | -q <qr-conf> | -c <file-conf>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] "
+            syntax="new-push {<interface-name>} {<client-ip-address>} {<server endpoint:port>} [-z <conf-zip> | -q <qr-conf> | -c <file-conf>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] "
             if [ $help != "true" ]; then shift; new-push $*; fi
         ;;
         *)
