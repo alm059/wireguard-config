@@ -475,9 +475,10 @@ peer-remove(){
                     peer_temp=""
                     peer_count=$peer_count+1
                 # \/ check if peer meets deletion criteria. can find those disabled
-                elif [[ "$line" == *"AllowedIPs"* ]] && [[ "$line" == *"${ip}"* ]] || [ "$line" == *"# ${name}" ]; then
+                elif ([[ "$line" == *"AllowedIPs"* ]] && [[ "$line" == *"${ip}"* ]] && [[ "${ip}" != "" ]]) || ([[ "$line" == *"# ${name}"* ]] && [ "${name}" != "" ] ); then
                     peer_temp_delete=true
                     # \/ check if a different peer has been flagged for deletion
+                    echo ${line}
                     if [ $peer_deleted != "false" ] && [ "$peer_count" != "$peer_deleted" ]; then
                         echo "Aborted. Multiple peers meet the same criteria"
                         return

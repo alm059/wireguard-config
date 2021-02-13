@@ -148,7 +148,7 @@ new-push(){
     name=${default_name}
     while [ $# -gt 0 ] ; do
         case "$1" in
-            -n) shift; name="#${1}\n";;
+            -n) shift; name="${1}\n";;
         esac
         shift
     done
