@@ -101,7 +101,7 @@ new(){
     fi
     # Could not export, or not set to export
     if [ "$zip_location" == "" ] && [ "$qr_location" == "" ] && [ "$conf_location" == "" ]; then
-        qrencode -t ansiutf8 "$file";
+        printf "$file" | qrencode -t ansiutf8;
         echo "### File Contents ###"
         printf "$file";
         echo "#####################"
