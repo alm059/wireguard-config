@@ -1,5 +1,10 @@
 # !/bin/sh
 
+# Defaults
+server_default_address=10.0.0.1
+server_default_port=51820
+# end defaults
+
 help=false
 visualize=false
 syntax=false # While false it hasn't found any command on the execution thread
@@ -33,8 +38,8 @@ new(){
     interface_name=$1
     shift
     # Optional args
-    address=10.0.0.1
-    port=51820
+    address=${server_default_address}
+    port=${server_default_port}
     forwarding_interface=false
     while [ $# -gt 0 ] ; do
         case "$1" in
@@ -214,7 +219,7 @@ peer-new(){
     fi
 
     if [[ "${ip}" != *"/"* ]]; then
-        echo "Remember to suffix the IP such as 10.0.0.2/32 (32 highly recommended)"
+        echo "Remember to suffix the IP such as 10.0.0.2/32 (32 highly recommended for clients)"
         return
     fi
 

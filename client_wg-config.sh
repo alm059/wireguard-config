@@ -4,6 +4,7 @@
 dns="1.1.1.1, 9.9.9.9, 8.8.8.8"
 allowed_ips="0.0.0.0/0"
 keepalive="-1"
+default_name="Auto-added"
 
 ##
 
@@ -144,7 +145,7 @@ new-push(){
     new $* -k $server_public_key # Send all arguments to the new command to create the client configuration file
 
     # Obtain the name
-    name="Auto-added"
+    name=${default_name}
     while [ $# -gt 0 ] ; do
         case "$1" in
             -n) shift; name="#${1}\n";;
