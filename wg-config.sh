@@ -81,9 +81,16 @@ enable-forwarding(){
     file=""
     forwarded=false
 
+    # Check if enabled
     while read line; do
         if [ "$line" != "" ]; then
-            if [[ "$line" != "[Interface]"* ]]; then
+            if [[ "$line" == *"[Peer]"* ]]; then # set space before new peer block
+                echo hi
+                echo ${line}
+                line="\n${line}"
+                echo ${line}
+            fi
+            if [[ "$line" != "[Interface]"* ]]; then # if interface, don't write
                 file="${file}${line}\n"
             fi
             if [[ "$line" == *"PostUp"* ]] || [[ "$line" == *"PostDown"* ]]; then
@@ -124,6 +131,9 @@ disable-forwarding(){
 
     while read line; do
         if [ "$line" != "" ]; then
+            if [[ "$line" == *"[Peer]"* ]]; then # set space before new peer block
+                line="\n${line}"
+            fi
             if [[ "$line" == *"PostUp"* ]] || [[ "$line" == *"PostDown"* ]]; then
                 forwarded=true
             else
@@ -215,9 +225,14 @@ peer-new(){
 
     # Commands
     peer="[Peer]\n${name}PublicKey = ${public_key}\nAllowedIPs = ${ip}\n"
+    file=""
 
     while read line; do
         if [ "$line" != "" ]; then
+            if [[ "$line" == *"[Peer]"* ]]; then # set extra space before new peer block
+                line="\n${line}"
+            fi
+            file="${file}${line}\n"
             if [[ "$line" == *"PublicKey = ${public_key}"* ]]; then
                 echo "Aborted. Public key matches with that of another peer."
                 return
@@ -232,7 +247,7 @@ peer-new(){
     done < /etc/wireguard/${interface_name}.conf;
 
     check_run "wg-quick down ${interface_name}"
-    check_run "printf \"\n${peer}\" >> /etc/wireguard/${interface_name}.conf" "printf peer > /etc/wireguard/${interface_name}.conf";
+    check_run "printf \"${file}\n${peer}\" > /etc/wireguard/${interface_name}.conf" "printf peer > /etc/wireguard/${interface_name}.conf";
     check_run "wg-quick up ${interface_name}"
     echo "Peer added to ${interface_name}.conf"
 }
@@ -307,14 +322,17 @@ peer-enable(){
                 peer_temp="${peer_temp}${line}\n"
                 peer_temp_enabled="${peer_temp_enabled}${line:2}\n"
             else # Line not belonging to disabled peer
+                if [[ "$line" == "[Peer]"* ]]; then # set extra space before new peer block
+                    line="\n${line}"
+                fi
                 file="${file}${line}\n"
             fi
         fi
     done < /etc/wireguard/${interface_name}.conf;
     if [ "$peer_temp_enable" == "true" ]; then
-        file="${file}${peer_temp_enabled}\n"
+        file="${file}${peer_temp_enabled}"
     else
-        file="${file}${peer_temp}\n"
+        file="${file}${peer_temp}"
     fi
 
     if [ "$peer_enabled" != "false" ]; then
@@ -394,9 +412,9 @@ peer-disable(){
         fi
     done < /etc/wireguard/${interface_name}.conf;
     if [ "$peer_temp_disable" == "true" ]; then
-        file="${file}${peer_temp_disabled}\n"
+        file="${file}${peer_temp_disabled}"
     else
-        file="${file}${peer_temp}\n"
+        file="${file}${peer_temp}"
     fi
 
     if [ "$peer_disabled" != "false" ]; then
@@ -473,7 +491,7 @@ peer-remove(){
         fi
     done < /etc/wireguard/${interface_name}.conf;
     if [ "$peer_temp_delete" == "false" ]; then
-        file="${file}${peer_temp}\n"
+        file="${file}${peer_temp}"
     fi
 
     if [ "$peer_deleted" != "false" ]; then
