@@ -22,6 +22,11 @@ new(){
     endpoint="$2"
     shift;shift;
 
+    if [[ "${client_ip}" != *"/"* ]]; then
+        echo "Remember to suffix the IP such as 10.0.0.2/32 (32 recommended for clients)"
+        return
+    fi
+
     server_public_key=""
     zip_location=""
     qr_location=""
@@ -150,7 +155,7 @@ new-push(){
     echo ""
     if [ -f "wg-config.sh" ]; then
         echo "Adding peer to server configuration file at /etc/wireguard/${interface_name}"
-        bash wg-config.sh peer-new ${interface_name} -k ${client_public_key} -i ${client_ip}/32 -n ${name}
+        bash wg-config.sh peer-new ${interface_name} -k ${client_public_key} -i ${client_ip} -n ${name}
     else
         echo "Could not find wg-config. Please add the peer manually or execute peer-new in wg-config.sh."
         echo "Client has been created but nothing has been modified"

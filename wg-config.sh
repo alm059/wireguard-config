@@ -214,7 +214,7 @@ peer-new(){
     fi
 
     if [[ "${ip}" != *"/"* ]]; then
-        echo "Remember to suffix the IP such as 10.0.0.2/32"
+        echo "Remember to suffix the IP such as 10.0.0.2/32 (32 highly recommended)"
         return
     fi
 
