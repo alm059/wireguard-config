@@ -170,7 +170,7 @@ remove(){
 }
 peer-new(){
     # Mandatory args
-    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+    if [ ! $# -ge 5 ] || [[ "$1" == "-"* ]] || [[ "$2" != "-"* ]] || [[ "$3" == "-"* ]] || [[ "$4" != "-"* ]] || [[ "$5" == "-"* ]]; then
         help=true
         return
     fi
@@ -238,7 +238,7 @@ peer-new(){
 }
 peer-enable(){
     # Mandatory args
-    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+    if [ ! $# -ge 3 ] || [[ "$1" == "-"* ]] || [[ "$2" != "-"* ]] || [[ "$3" == "-"* ]] ; then
         help=true
         return
     fi
@@ -323,12 +323,12 @@ peer-enable(){
         check_run "wg-quick up ${interface_name}"
         echo "Enabled peer ${name} ${ip} from ${interface_name}.conf"
     else
-        echo "Peer not found"
+        echo "Disabled peer not found"
     fi
 }
 peer-disable(){
     # Mandatory args
-    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+    if [ ! $# -ge 3 ] || [[ "$1" == "-"* ]] || [[ "$2" != "-"* ]] || [[ "$3" == "-"* ]] ; then
         help=true
         return
     fi
@@ -410,7 +410,7 @@ peer-disable(){
 }
 peer-remove(){
     # Mandatory args
-    if [ ! $# -ge 1 ] || [[ "$1" == "-"* ]] ; then
+    if [ ! $# -ge 3 ] || [[ "$1" == "-"* ]] || [[ "$2" != "-"* ]] || [[ "$3" == "-"* ]] ; then
         help=true
         return
     fi
@@ -544,7 +544,7 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
 done
 
 if [ "$help" == "true" ] && [ "$syntax" == "false" ] ; then # Full help
-    echo "Syntax: bash wireguard_server.sh [options] <command> <arguments> [optional arguments]";
+    echo "Syntax: bash wg-config.sh [options] <command> <arguments> [optional arguments]";
     echo "Available commands: new, remove, enable-forwarding, disable-forwarding, peer-new, peer-remove, peer-enable, peer-disable, reminder, show"
 elif [ "$help" == "true" ] && [ "$syntax" != "false" ] ; then # Command explanation or wrong args
     echo $syntax

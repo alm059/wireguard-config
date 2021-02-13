@@ -1,7 +1,7 @@
 # !/bin/sh
 
 # DEFAULTS
-dns="1.1.1.1, 8.8.8.8"
+dns="1.1.1.1, 9.9.9.9, 8.8.8.8"
 allowed_ips="0.0.0.0/0"
 keepalive="-1"
 
