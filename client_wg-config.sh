@@ -148,14 +148,12 @@ new-push(){
     done
 
     echo ""
-    echo "Adding peer to server configuration file at /etc/wireguard/${interface_name}"
     if [ -f "wg-config.sh" ]; then
+        echo "Adding peer to server configuration file at /etc/wireguard/${interface_name}"
         bash wg-config.sh peer-new ${interface_name} -k ${client_public_key} -i ${client_ip}/32 -n ${name}
     else
-        peer="[Peer]\n${name}PublicKey = ${client_public_key}\nAllowedIPs = ${client_ip}/32\n\n"
-        wg-quick down ${interface_name}
-        printf "$peer" >> "/etc/wireguard/${interface_name}.conf"
-        wg-quick up ${interface_name}
+        echo "Could not find wg-config. Please add the peer manually or execute peer-new in wg-config.sh."
+        echo "Client has been created but nothing has been modified"
     fi
 
 }

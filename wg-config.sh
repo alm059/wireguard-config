@@ -85,10 +85,7 @@ enable-forwarding(){
     while read line; do
         if [ "$line" != "" ]; then
             if [[ "$line" == *"[Peer]"* ]]; then # set space before new peer block
-                echo hi
-                echo ${line}
                 line="\n${line}"
-                echo ${line}
             fi
             if [[ "$line" != "[Interface]"* ]]; then # if interface, don't write
                 file="${file}${line}\n"
@@ -232,7 +229,7 @@ peer-new(){
             if [[ "$line" == *"[Peer]"* ]]; then # set extra space before new peer block
                 line="\n${line}"
             fi
-            file="${file}${line}\n"
+            file="${file}${line//%/%%}\n"
             if [[ "$line" == *"PublicKey = ${public_key}"* ]]; then
                 echo "Aborted. Public key matches with that of another peer."
                 return
@@ -325,7 +322,7 @@ peer-enable(){
                 if [[ "$line" == "[Peer]"* ]]; then # set extra space before new peer block
                     line="\n${line}"
                 fi
-                file="${file}${line}\n"
+                file="${file}${line//%/%%}\n"
             fi
         fi
     done < /etc/wireguard/${interface_name}.conf;
@@ -381,7 +378,7 @@ peer-disable(){
     while read line; do
         if [ "$line" != "" ]; then
             if [ "$peer_temp" == "" ] && [[ "$line" != "[Peer]"* ]]; then #pre-peer line
-                file="${file}${line}\n"
+                file="${file}${line//%/%%}\n"
             else # peer line
                 if [[ "$line" == *"[Peer]"* ]]; then # new peer
                     # Reset
@@ -462,7 +459,7 @@ peer-remove(){
     while read line; do
         if [ "$line" != "" ]; then
             if [ "$peer_temp" == "" ] && [[ "$line" != *"[Peer]"* ]]; then #pre-peer line
-                file="${file}${line}\n"
+                file="${file}${line//%/%%}\n"
             else # peer line
                 if [[ "$line" == *"[Peer]"* ]]; then # new peer
                     # Reset
