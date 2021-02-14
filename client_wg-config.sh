@@ -17,6 +17,7 @@ new(){
     # Mandatory args
     if [ ! $# -ge 4 ] || [[ "$1" == "-"* ]] || [[ "$2" == "-"* ]] || [[ "$3" != "-"* ]] || [[ "$4" == "-"* ]]; then
         help=true
+        false
         return
     fi
     client_ip="$1"
@@ -25,6 +26,7 @@ new(){
 
     if [[ "${client_ip}" != *"/"* ]]; then
         echo "Remember to suffix the IP such as 10.0.0.2/32 (32 recommended for clients)"
+        false
         return
     fi
 
@@ -40,7 +42,7 @@ new(){
                 if [ -f $1 ]; then
                     server_public_key=$(<$1)
                 else
-                    echo "Public key file does not exist"; return
+                    echo "Public key file does not exist"; false; return
                 fi
             ;;
             -k) shift; server_public_key=$1;;
@@ -57,6 +59,7 @@ new(){
 
     if [ "$server_public_key" == "" ]; then
         help=true
+        false
         return
     fi
 
@@ -142,7 +145,9 @@ new-push(){
     server_public_key=$(echo ${server_private_key} | wg pubkey)
     unset -v server_private_key
 
-    new $* -k $server_public_key # Send all arguments to the new command to create the client configuration file
+    if ! new $* -k $server_public_key; then # Send all arguments to the new command to create the client configuration file
+        return
+    fi
 
     # Obtain the name
     name=${default_name}
