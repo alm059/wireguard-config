@@ -539,19 +539,19 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
             if [ $help != "true" ]; then shift; remove $*; fi
         ;;
         peer-new)
-            syntax="peer-new {<interface-name>} {-f <public key file> | -k <public key>} {-i <peer-ip>} [-n <name or identifier>]"
+            syntax="peer-new {<interface-name>} {-f <public key file> | -k <public key>} {-i <peer-ip>} [-n <name or identifier (without spaces)>]"
             if [ $help != "true" ]; then shift; peer-new $*; fi
         ;;
         peer-enable)
-            syntax="peer-enable {<interface-name>} {-i <peer-ip> | -n <name or identifier>}"
+            syntax="peer-enable {<interface-name>} {-i <peer-ip> | -n <name or identifier (without spaces)>}"
             if [ $help != "true" ]; then shift; peer-enable $*; fi
         ;;
         peer-disable)
-            syntax="peer-disable {<interface-name>} {-i <peer-ip> | -n <name or identifier>}"
+            syntax="peer-disable {<interface-name>} {-i <peer-ip> | -n <name or identifier (without spaces)>}"
             if [ $help != "true" ]; then shift; peer-disable $*; fi
         ;;
         peer-remove)
-            syntax="peer-remove {<interface-name>} {-i <peer-ip> | -n <name or identifier>}"
+            syntax="peer-remove {<interface-name>} {-i <peer-ip> | -n <name or identifier (without spaces)>}"
             if [ $help != "true" ]; then shift; peer-remove $*; fi
         ;;
         *)

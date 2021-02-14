@@ -180,7 +180,7 @@ while [ $# -gt 0 ] && [ "$syntax" == "false" ] ; do
             if [ $help != "true" ]; then shift; new $*; fi
         ;;
         new-push)
-            syntax="new-push {<interface-name>} {<client-ip-address>} {<server endpoint:port>} [-z <conf-zip> | -q <qr-conf> | -c <file-conf>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] "
+            syntax="new-push {<interface-name>} {<client-ip-address>} {<server endpoint:port>} [-z <conf-zip> | -q <qr-conf> | -c <file-conf>] [-d <dns>] [-a <allowed-ips>] [-s <save-pubkey>] [-p <keepalive-seconds>] [-n <name or identifier (without spaces)>]"
             if [ $help != "true" ]; then shift; new-push $*; fi
         ;;
         *)
