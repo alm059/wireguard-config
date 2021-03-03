@@ -63,6 +63,7 @@ new(){
     if [ "$forwarding_interface" != "false" ]; then
         check_run "sysctl -w net.ipv4.ip_forward=1"
         check_run "printf \"PostUp = iptables -A FORWARD -i %%i -j ACCEPT; iptables -A FORWARD -o %%i -j ACCEPT; iptables -t nat -A POSTROUTING -o ${forwarding_interface} -j MASQUERADE\nPostDown = iptables -D FORWARD -i %%i -j ACCEPT; iptables -D FORWARD -o %%i -j ACCEPT; iptables -t nat -D POSTROUTING -o ${forwarding_interface} -j MASQUERADE\n\" >> /etc/wireguard/${interface_name}.conf" "printf \"PostUp\"... >> /etc/wireguard/${interface_name}.conf"
+        echo "Might need to modify ufw settings to allow forwarding. Edit 'ufw sysctl' to do this"
     fi
 
     check_run "wg-quick up ${interface_name}"
@@ -113,6 +114,7 @@ enable-forwarding(){
     echo "Allowing traffic forwarding at system level"
     check_run "sysctl -w net.ipv4.ip_forward=1"
     check_run "wg-quick up ${interface_name}"
+    echo "Might need to modify ufw settings to allow forwarding. Edit 'ufw sysctl' to do this"
 }
 disable-forwarding(){
     # Mandatory args
@@ -154,6 +156,7 @@ disable-forwarding(){
         echo "Could not find redirection rules in the config file"
     fi
     echo "If you wish to disable traffic forwarding at system level (for all interfaces) execute: sudo sysctl -w net.ipv4.ip_forward=0"
+    echo "Might need to modify ufw settings to remove forwarding too. Edit 'ufw sysctl' to do this"
 }
 remove(){
     # Mandatory args
