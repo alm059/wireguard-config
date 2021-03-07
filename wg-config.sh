@@ -1,5 +1,8 @@
 # !/bin/sh
 
+# Sudo checks
+[ "$UID" -eq 0 ] || exec sudo bash "$0" "$@"
+
 # Defaults
 server_default_address=10.0.0.1
 server_default_port=51820
